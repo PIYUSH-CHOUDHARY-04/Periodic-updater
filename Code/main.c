@@ -7,6 +7,13 @@ int retval=0x00000000;
 
 // Routines
 
+/**
+ * @brief Function to copy a file from one directory to other
+ * @param param1 passes the path of the destination, includes the exact file name into which data has to be copied not just directory name
+ * @param param2 passes the path of the file to be copied to destination
+ * @return tells whether copy succeeded or not
+ */
+
 int copy_file(const char* dest, const char* file_path){
 	int src_fd=open(file_path,O_RDONLY);
 	if(src_fd<0){
@@ -43,10 +50,60 @@ int copy_file(const char* dest, const char* file_path){
 	return 0;
 }
 
+/**
+ * @brief generates random string for CSRF protection on web reequests.
+ * @param param1 passes the pointer to the array where random string will be stored
+ * @param param2 passes the size of the random string
+ * @return returns the pointer to populated random number string on success, NULL on failure
+ */
+unsigned char* csrf_prot_random_str(unsigned char* rand_str, int size){
+	int urand_fd=open(URAND,O_RDONLY);
+	if(urand_fd<0){
+		return NULL;
+	}
+	if(read(urand_fd, rand_str, size)<0){
+		return NULL;
+	}
+	close(urand_fd);
+	return rand_str;
+}
+
+/**
+ * @brief creates an authorization URI from JSON object
+ * @param param1 passes pointer to the json object
+ * @return returns pointer to the dynamically allocated URI array.
+ */
+char* create_auth_uri(api_metadata* ap_md){
+	// URI layout : 
+
+}
+
+/**
+ * @brief Checks user session minimality, if minimal or tty based, then GUI based browser won't be present, authorization must be done in some other way
+ * param param1 passes the pointer to the enviromental path array which has to be parsed to check for session type
+ * return returns 0 if session is GUI based, returns 1 if its minimal or tty based, more values may be added in future
+ */
+int check_session_type(char** environ_var){
+	char* val_desktop_session=getenv(DESKTOP_SESSION);
+	char* val_xdg_current_desktop=getenv(XDG_CURRENT_DESKTOP);
+	char* val_xdg_session_type=getenv(XDG_SESSION_TYPE);
+	char* val_display=getenv(DISPLAY);
+
+
+	if( ((val_desktop_session != NULL) && (strlen(val_desktop_session>0))) || ((val_xdg_current_desktop != NULL) && (strlen(val_xdg_current_desktop)>0)) || ((strcmp(val_xdg_session_type, TTY) != 0) && (strlen(val_xdg_session_type)>0)) || ((val_display != NULL) && (strlen(val_display)>0)) ){
+		printf("GUI mode detected.\n");
+		return 0;
+	}else{
+		printf("tty mode detected.\n");
+		return 1;
+	}
+}
+
+
    
 
 
-int main(void){
+int main(int argc, char** argv, char** envp){
 	char app_dir[PATH_MAX]={0};
 	short int rl=readlink(READLINK_PATH, app_dir, sizeof(app_dir));
 	if(rl<0){
@@ -85,11 +142,15 @@ int main(void){
 			return -3;
 		} 
 		// let's now parse json file, make auth request and capture the code.
+		// parsing .json file
 		api_metadata* api_auth_req = (api_metadata*)malloc(sizeof(api_metadata));
 		if((retval=parse_json(json_path,api_auth_req))!=0){
 			printf("parse_json() failed with retval : %d\n",retval);
 			return -4;
 		}
+		// making the Autharization URI using .json data
+		char* auth_req_uri=(char*)malloc(sizeof(char)*AUTH_URI_MAXSIZE);
+
 	
 	
 	

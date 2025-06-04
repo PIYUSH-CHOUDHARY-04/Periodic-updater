@@ -1,0 +1,5 @@
+DESKTOP_SESSION = NA , cinnamon etc
+XDG_CURRENT_DESKTOP = NA ,  X-cinnamon etc
+XDG_SESSION_TYPE = tty , x11 etc
+DISPLAY = NA , :0
+
